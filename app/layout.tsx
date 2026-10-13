@@ -41,7 +41,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className="h-full antialiased">
-      <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-100">
+      <body className="flex min-h-full flex-col bg-[var(--ec-canvas)] text-[var(--ec-ink)] selection:bg-amber-200 selection:text-slate-950 dark:selection:bg-amber-900 dark:selection:text-white">
         <Script
           id="theme-init"
           strategy="beforeInteractive"

@@ -1,10 +1,26 @@
 @import "tailwindcss";
 
-/* Tema scuro comandato da interruttore (classe .dark su <html>)
-   invece che dal sistema operativo. Default: scuro. */
+/* Tema scuro comandato da interruttore (classe .dark su <html>). */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* --- Ritocchi mobile --- */
+:root {
+  --ec-ink: #111827;
+  --ec-muted: #64748b;
+  --ec-gold: #d6a84f;
+  --ec-gold-soft: #f6e8c3;
+  --ec-surface: #ffffff;
+  --ec-canvas: #f6f7fb;
+}
+
+.dark {
+  --ec-ink: #f8fafc;
+  --ec-muted: #94a3b8;
+  --ec-gold: #e2b95f;
+  --ec-gold-soft: #3b2f18;
+  --ec-surface: #111827;
+  --ec-canvas: #080d18;
+}
+
 html,
 body {
   /* Niente scorrimento laterale: la pagina non deve mai "slidare".

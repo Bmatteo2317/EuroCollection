@@ -7,28 +7,29 @@ export default async function Navbar() {
   const profile = await getProfile().catch(() => null);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/60">
-      <nav className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-1 px-2 sm:px-4">
-        <Link href="/" className="shrink-0 text-base font-extrabold tracking-tight sm:text-lg">
-          🪙 Euro<span className="hidden min-[420px]:inline">Collection</span>
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-[var(--ec-canvas)]/85 backdrop-blur-xl dark:border-slate-800/80">
+      <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="group flex shrink-0 items-center gap-2 text-base font-black tracking-tight sm:text-lg">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-300 to-amber-600 text-sm text-slate-950 shadow-lg shadow-amber-900/15 transition-transform group-hover:rotate-6">EC</span>
+          <span>Euro<span className="text-amber-500">Collection</span></span>
         </Link>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 text-[11px] min-[380px]:text-xs sm:gap-2 sm:text-sm">
           <Link
             href="/"
-            className="shrink-0 rounded-full px-1.5 py-1.5 hover:bg-zinc-100 sm:px-3 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-xl px-2 py-2 text-slate-600 transition-colors hover:bg-white hover:text-slate-950 sm:px-3 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             Catalogo
           </Link>
           <Link
             href="/collezione"
-            className="shrink-0 rounded-full px-1.5 py-1.5 hover:bg-zinc-100 sm:px-3 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-xl px-2 py-2 text-slate-600 transition-colors hover:bg-white hover:text-slate-950 sm:px-3 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             <span className="hidden min-[420px]:inline">La mia collezione</span>
             <span className="min-[420px]:hidden">Collezione</span>
           </Link>
           <Link
             href="/scambi"
-            className="shrink-0 rounded-full px-1.5 py-1.5 hover:bg-zinc-100 sm:px-3 dark:hover:bg-zinc-800"
+            className="shrink-0 rounded-xl px-2 py-2 text-slate-600 transition-colors hover:bg-white hover:text-slate-950 sm:px-3 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             Scambi
           </Link>

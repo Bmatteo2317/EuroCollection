@@ -27,14 +27,17 @@ export default function CountryExplorer({
 
   return (
     <section>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Cerca paese… (es. Italia, Finl…)"
-          className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm outline-none focus:border-zinc-500 sm:max-w-xs dark:border-zinc-700 dark:bg-zinc-900"
-        />
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white/70 p-3 shadow-sm backdrop-blur sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-900/70">
+        <label className="relative flex-1 sm:max-w-sm">
+          <span className="sr-only">Cerca paese</span>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Cerca paese o codice…"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10 dark:border-slate-700 dark:bg-slate-950"
+          />
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
           <input
             type="checkbox"
             checked={onlyComm}
@@ -50,18 +53,18 @@ export default function CountryExplorer({
           <Link
             key={c.code}
             href={`/paese/${c.code}`}
-            className="group rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+            className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl hover:shadow-amber-950/5 dark:border-slate-800 dark:bg-slate-900"
           >
             <div className="h-8">
               <CountryFlag code={c.code} name={c.name} size={36} />
             </div>
-            <div className="mt-2 font-bold text-zinc-900 dark:text-zinc-50">
+            <div className="mt-3 font-bold text-slate-900 dark:text-slate-50">
               {c.name}
             </div>
             <div className="mt-1 text-xs text-zinc-500">
               {c.total} monete · {c.commemoratives} comm.
             </div>
-            <div className="mt-2 text-xs font-semibold text-emerald-700 group-hover:underline dark:text-emerald-400">
+            <div className="mt-3 text-xs font-bold text-amber-600 group-hover:underline dark:text-amber-300">
               Apri catalogo →
             </div>
           </Link>
