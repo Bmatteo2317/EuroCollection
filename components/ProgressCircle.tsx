@@ -13,7 +13,7 @@ export default function ProgressCircle({ owned, total, size = 148 }: Props) {
   const filled = (percent / 100) * c;
 
   return (
-    <div className="flex flex-col items-center gap-5 min-[430px]:flex-row">
+    <div className="flex flex-col items-center gap-5 rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur-sm min-[430px]:flex-row">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
@@ -22,7 +22,7 @@ export default function ProgressCircle({ owned, total, size = 148 }: Props) {
             r={r}
             fill="none"
             strokeWidth={stroke}
-            className="stroke-zinc-200 dark:stroke-zinc-800"
+            className="stroke-white/15"
           />
           <circle
             cx={size / 2}
@@ -32,7 +32,7 @@ export default function ProgressCircle({ owned, total, size = 148 }: Props) {
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={`${filled} ${c}`}
-            className="stroke-emerald-500 transition-all duration-700"
+            className="stroke-amber-300 transition-all duration-700"
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
