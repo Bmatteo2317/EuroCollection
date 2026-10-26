@@ -560,7 +560,7 @@ export default function PhotoCoinScanner() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="scanner-title"
-            className="max-h-[94dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-4 shadow-2xl sm:rounded-3xl sm:p-6 dark:bg-zinc-900"
+            className="max-h-[94dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl sm:p-6 dark:bg-zinc-900"
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -633,7 +633,9 @@ export default function PhotoCoinScanner() {
           )}
         </div>
 
-        <div className="relative mx-auto aspect-square w-full max-w-[340px] overflow-hidden rounded-[2rem] bg-black">
+        {/* Il cerchio resta quadrato ma si rimpicciolisce sui telefoni bassi,
+            così lo scatto e la galleria non finiscono fuori schermo. */}
+        <div className="relative mx-auto aspect-square w-[min(100%,340px,42dvh)] overflow-hidden rounded-[2rem] bg-black">
           <video
             ref={videoRef}
             muted
@@ -740,7 +742,27 @@ export default function PhotoCoinScanner() {
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
+        {(front || back) && (
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-zinc-50 p-2 text-[11px] dark:bg-zinc-800/60">
+            <div className="flex items-center gap-2">
+              {front && <ShotThumb src={front} label="Fronte" />}
+              {back && <ShotThumb src={back} label="Retro" />}
+            </div>
+            {front && back && (
+              <button
+                type="button"
+                onClick={() => void runRecognition(front, back)}
+                className="rounded-full bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-500"
+              >
+                Analizza le foto
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Azioni sempre raggiungibili: restano ancorate in basso mentre le
+            avvertenze scorrono sopra. */}
+        <div className="sticky bottom-0 z-10 flex flex-col gap-2 bg-white/95 pt-2 backdrop-blur-sm dark:bg-zinc-900/95">
           <button
             type="button"
             onClick={() => shoot(false)}
@@ -787,28 +809,6 @@ export default function PhotoCoinScanner() {
               }}
             />
           </label>
-
-          {(front || back) && (
-            <div className="mt-1 flex items-center justify-between gap-2 rounded-xl bg-zinc-50 p-2 text-[11px] dark:bg-zinc-800/60">
-              <div className="flex items-center gap-2">
-                {front && (
-                  <ShotThumb src={front} label="Fronte" />
-                )}
-                {back && (
-                  <ShotThumb src={back} label="Retro" />
-                )}
-              </div>
-              {front && back && (
-                <button
-                  type="button"
-                  onClick={() => void runRecognition(front, back)}
-                  className="rounded-full bg-emerald-600 px-3 py-1.5 font-bold text-white hover:bg-emerald-500"
-                >
-                  Analizza le foto
-                </button>
-              )}
-            </div>
-          )}
 
           <p className="text-center text-[10px] leading-4 text-zinc-400">
             Le foto vengono inviate al servizio di riconoscimento e non sono

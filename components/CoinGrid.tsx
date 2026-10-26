@@ -710,7 +710,7 @@ function YearChips({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
+        className="flex min-h-9 w-full items-center justify-between gap-2 text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
         <span className="tabular-nums">
           Anni: {ownedCount}/{total}
@@ -731,7 +731,7 @@ function YearChips({
                   disabled={busy}
                   aria-pressed={has}
                   aria-label={`${has ? "Rimuovi" : "Aggiungi"} anno ${y}`}
-                  className={`flex-1 rounded-lg px-1.5 py-0.5 text-left text-[11px] font-semibold tabular-nums transition disabled:cursor-wait disabled:opacity-60 ${
+                  className={`flex-1 rounded-lg px-2 py-1.5 text-left text-[11px] font-semibold tabular-nums transition disabled:cursor-wait disabled:opacity-60 ${
                     has
                       ? "bg-emerald-600 text-white shadow-sm"
                       : "bg-zinc-200 text-zinc-500 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
@@ -746,7 +746,7 @@ function YearChips({
                       onClick={() => step(y, -1)}
                       disabled={busy}
                       aria-label={`Un pezzo in meno del ${y}`}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-zinc-300 text-sm font-bold text-zinc-600 hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-300 text-sm font-bold text-zinc-600 hover:bg-zinc-100 disabled:cursor-wait disabled:opacity-40 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
                       −
                     </button>
@@ -756,7 +756,7 @@ function YearChips({
                       disabled={busy || qty >= COLLECTION_LIMITS.MAX}
                       aria-label={`Un doppione in più del ${y}`}
                       title="Aggiungi un doppione di questo anno"
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-900 text-sm font-bold text-white hover:bg-zinc-700 disabled:opacity-30 dark:bg-zinc-100 dark:text-zinc-900"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-sm font-bold text-white hover:bg-zinc-700 disabled:opacity-30 dark:bg-zinc-100 dark:text-zinc-900"
                     >
                       +
                     </button>
@@ -788,7 +788,7 @@ function FilterChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full px-2.5 py-1 font-medium transition ${
+      className={`rounded-full px-3 py-1.5 font-medium transition ${
         active
           ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
           : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"

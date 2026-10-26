@@ -37,7 +37,7 @@ export default function ThemeToggle() {
       onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
       aria-label={theme === "dark" ? "Passa al tema chiaro" : "Passa al tema scuro"}
       title={theme === "dark" ? "Tema chiaro" : "Tema scuro"}
-      className="flex h-7 w-7 items-center justify-center rounded-full text-sm hover:bg-zinc-100 sm:h-9 sm:w-9 sm:text-base dark:hover:bg-zinc-800"
+      className="flex size-9 items-center justify-center rounded-full text-base transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
     >
       {theme === "dark" ? "☀️" : "🌙"}
     </button>
