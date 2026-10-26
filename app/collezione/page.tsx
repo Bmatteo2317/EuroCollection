@@ -14,6 +14,7 @@ import ProgressCircle from "@/components/ProgressCircle";
 import CompletionDonut from "@/components/CompletionDonut";
 import CountryFlag from "@/components/CountryFlag";
 import CoinGrid from "@/components/CoinGrid";
+import PhotoCoinScanner from "@/components/PhotoCoinScanner";
 
 // Pagina personale: mai prerenderizzata in build (usa cookies()).
 export const dynamic = "force-dynamic";
@@ -63,11 +64,14 @@ export default async function CollezionePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <header>
-        <h1 className="text-3xl font-extrabold">La mia collezione</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {pieces} pezzi totali · {owned} tipi distinti · {duplicates} doppioni
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold">La mia collezione</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            {pieces} pezzi totali · {owned} tipi distinti · {duplicates} doppioni
+          </p>
+        </div>
+        <PhotoCoinScanner />
       </header>
 
       <section className="grid gap-4 rounded-3xl border border-zinc-200 bg-white p-6 sm:grid-cols-2 dark:border-zinc-800 dark:bg-zinc-900">
@@ -127,7 +131,8 @@ export default async function CollezionePage() {
             >
               catalogo
             </a>{" "}
-            e premi + sulle monete che hai.
+            e premi + sulle monete che hai. Puoi anche usare “Aggiungi con
+            foto” qui sopra per riconoscerne una dal fronte e dal retro.
           </p>
         ) : (
           <CoinGrid
