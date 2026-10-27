@@ -123,6 +123,10 @@ export default function PhotoCoinScanner() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<Stage>("camera");
+  // Da dove è stato aperto il modale: "search" = ricerca scritta nel catalogo,
+  // "photo" = due foto guidate. Serve a far ripartire lo stesso flusso anche
+  // dopo "Aggiungi un'altra moneta".
+  const [entry, setEntry] = useState<"photo" | "search">("photo");
   const [side, setSide] = useState<Side>("front");
   const [front, setFront] = useState<string | null>(null);
   const [back, setBack] = useState<string | null>(null);
@@ -341,8 +345,12 @@ export default function PhotoCoinScanner() {
     return () => window.clearTimeout(timer);
   }, [query, stage, open]);
 
-  const startFlow = () => {
+  const startFlow = (target: "photo" | "search") => {
+    // Il modale riparte sempre dall'inizio del flusso scelto: la ricerca nel
+    // catalogo (si apre già sul campo di ricerca) oppure le due foto.
     close();
+    setEntry(target);
+    if (target === "search") setStage("manual");
     setOpen(true);
   };
 
@@ -508,7 +516,7 @@ export default function PhotoCoinScanner() {
 
   const addAnother = () => {
     recognitionSeq.current += 1;
-    setStage("camera");
+    setStage(entry === "search" ? "manual" : "camera");
     setSide("front");
     setFront(null);
     setBack(null);
@@ -540,14 +548,24 @@ export default function PhotoCoinScanner() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={startFlow}
-        className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
-      >
-        <span aria-hidden="true">📷</span>
-        Aggiungi con foto
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => startFlow("search")}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
+        >
+          <span aria-hidden="true">🔍</span>
+          Cerca la moneta
+        </button>
+        <button
+          type="button"
+          onClick={() => startFlow("photo")}
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          <span aria-hidden="true">📷</span>
+          Aggiungi con foto
+        </button>
+      </div>
 
       {open && (
         <div
@@ -565,11 +583,14 @@ export default function PhotoCoinScanner() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 id="scanner-title" className="text-lg font-extrabold">
-                  Aggiungi una moneta con due foto
+                  {entry === "search"
+                    ? "Cerca la moneta"
+                    : "Aggiungi una moneta con due foto"}
                 </h2>
                 <p className="mt-0.5 text-xs text-zinc-500">
-                  Fronte e retro: il riconoscimento propone la moneta, poi
-                  confermi tu.
+                  {entry === "search"
+                    ? "Scrivi paese, anno, valore o tema: riconosci la moneta che hai in mano e la aggiungi con un tocco."
+                    : "Fronte e retro: il riconoscimento propone la moneta, poi confermi tu."}
                 </p>
               </div>
               <button
@@ -583,13 +604,15 @@ export default function PhotoCoinScanner() {
               </button>
             </div>
 
-            <ol className="mt-4 flex items-center gap-2 text-[11px] font-semibold">
-              <Step n={1} label="Fronte" state={step === 1 ? "active" : front ? "done" : "todo"} />
-              <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-700" />
-              <Step n={2} label="Retro" state={step === 2 ? "active" : back ? "done" : "todo"} />
-              <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-700" />
-              <Step n={3} label="Conferma" state={step === 3 ? "active" : "todo"} />
-            </ol>
+            {entry === "photo" && (
+              <ol className="mt-4 flex items-center gap-2 text-[11px] font-semibold">
+                <Step n={1} label="Fronte" state={step === 1 ? "active" : front ? "done" : "todo"} />
+                <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-700" />
+                <Step n={2} label="Retro" state={step === 2 ? "active" : back ? "done" : "todo"} />
+                <span className="h-px flex-1 bg-zinc-200 dark:bg-zinc-700" />
+                <Step n={3} label="Conferma" state={step === 3 ? "active" : "todo"} />
+              </ol>
+            )}
 
             {stage === "camera" && renderCamera()}
             {stage === "analyzing" && renderAnalyzing()}
@@ -1116,15 +1139,17 @@ export default function PhotoCoinScanner() {
               {saving ? "Aggiunta in corso…" : "✓ Aggiungi questa moneta"}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() =>
-              setStage(candidates.length > 0 || analyzeError ? "result" : "camera")
-            }
-            className="rounded-full border border-zinc-300 px-4 py-2.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-          >
-            ← Torna indietro
-          </button>
+          {entry === "photo" && (
+            <button
+              type="button"
+              onClick={() =>
+                setStage(candidates.length > 0 || analyzeError ? "result" : "camera")
+              }
+              className="rounded-full border border-zinc-300 px-4 py-2.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              ← Torna indietro
+            </button>
+          )}
         </div>
       </div>
     );

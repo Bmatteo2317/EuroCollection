@@ -131,8 +131,10 @@ export default async function CollezionePage() {
             >
               catalogo
             </a>{" "}
-            e premi + sulle monete che hai. Puoi anche usare “Aggiungi con
-            foto” qui sopra per riconoscerne una dal fronte e dal retro.
+            e premi + sulle monete che hai. In alternativa usa “Cerca la
+            moneta” qui sopra e scrivi paese, anno o valore di quella che hai
+            in mano, oppure “Aggiungi con foto” per riconoscerla dal fronte e
+            dal retro.
           </p>
         ) : (
           <CoinGrid

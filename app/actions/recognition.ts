@@ -21,6 +21,7 @@ export async function searchCoins(query: string): Promise<RecognizedCoin[]> {
     for (const coin of getCatalog()) {
       const country = fold(coin.countryName);
       const face = fold(coin.faceValue);
+      const denomination = fold(coin.denomination);
       const description = fold(coin.description);
       const haystack = `${country} ${coin.country} ${face} ${coin.denomination} ${coin.year} ${coin.years.join(" ")} ${description}`;
 
@@ -34,7 +35,12 @@ export async function searchCoins(query: string): Promise<RecognizedCoin[]> {
         if (country.includes(term)) score += 5;
         if (String(coin.year) === term) score += 9;
         else if (coin.years.includes(Number(term))) score += 5;
-        if (term.length >= 2 && face.includes(term)) score += 4;
+        // Valore nominale: è il segnale più forte quando si scrive “1 euro”,
+        // “50 cent”, “2 €”. Il confronto è su faccia E denominazione e non ha
+        // la soglia di lunghezza: senza, il termine “1” non pesava su nessuna
+        // moneta, tutti i candidati restavano a pari punteggio e in cima
+        // finivano i 2 € commemorativi più recenti invece della moneta cercata.
+        if (face.includes(term) || denomination.includes(term)) score += 6;
         if (description.includes(term)) score += 2;
       }
       if (matchesAll) ranked.push({ coin, score });
