@@ -103,6 +103,44 @@ export function isConnectionError(error: unknown): boolean {
 export const NEON_UNREACHABLE_MESSAGE =
   "Neon non raggiungibile: controlla che il progetto Neon sia attivo (non in pausa) e che la connection string su Vercel sia quella pooled con ?sslmode=require, poi fai Redeploy.";
 
+/**
+ * true per gli errori di integrità Postgres (SQLSTATE 23xxx: CHECK, UNIQUE,
+ * FOREIGN KEY, NOT NULL). Sono dati rifiutati dal database, non guasti di
+ * connessione: ritentare non serve e presentarli come "database non
+ * disponibile" manda fuori strada chi legge.
+ */
+export function isConstraintError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const { code, message, constraint } = error as {
+    code?: unknown;
+    message?: unknown;
+    constraint?: unknown;
+  };
+  if (typeof code === "string" && code.startsWith("23")) return true;
+  if (typeof constraint === "string" && constraint.length > 0) return true;
+  return (
+    typeof message === "string" &&
+    /violates (check|unique|foreign key|not-null) constraint|duplicate key value/i.test(
+      message
+    )
+  );
+}
+
+/** Nome del vincolo violato, quando Postgres lo riporta. */
+export function constraintName(error: unknown): string | null {
+  if (!error || typeof error !== "object") return null;
+  const { constraint, message } = error as {
+    constraint?: unknown;
+    message?: unknown;
+  };
+  if (typeof constraint === "string" && constraint) return constraint;
+  if (typeof message !== "string") return null;
+  return message.match(/constraint "([^"]+)"/)?.[1] ?? null;
+}
+
+export const DATA_REJECTED_MESSAGE =
+  "Il database ha rifiutato l'operazione: i dati non rispettano un vincolo. Non è un problema di connessione, quindi riprovare non serve.";
+
 /** Dettaglio tecnico grezzo (troncato) da mostrare per la diagnosi. */
 function techDetail(raw: string): string {
   const t = raw.replace(/\s+/g, " ").trim().slice(0, 220);
@@ -171,6 +209,12 @@ export function toActionError(e: unknown): string {
   ) {
     return raw;
   }
+  if (isConstraintError(e)) {
+    const name = constraintName(e);
+    return `${DATA_REJECTED_MESSAGE}${name ? ` Vincolo: ${name}.` : ""}${techDetail(
+      raw
+    )}`;
+  }
   if (isConnectionError(e)) {
     return `${NEON_UNREACHABLE_MESSAGE}${techDetail(raw)}`;
   }
@@ -193,6 +237,13 @@ export function toActionError(e: unknown): string {
 export function toFriendlyDbError(error: unknown, fallback: string): Error {
   if (isMissingEnvError(error)) return new Error(MISSING_ENV_MESSAGE);
   if (isMissingTableError(error)) return new Error(MISSING_TABLES_MESSAGE);
+  if (isConstraintError(error)) {
+    const name = constraintName(error);
+    const raw = error instanceof Error ? error.message : "";
+    return new Error(
+      `${DATA_REJECTED_MESSAGE}${name ? ` Vincolo: ${name}.` : ""}${techDetail(raw)}`
+    );
+  }
   if (isConnectionError(error)) {
     const raw = error instanceof Error ? error.message : "";
     return new Error(`${NEON_UNREACHABLE_MESSAGE}${techDetail(raw)}`);

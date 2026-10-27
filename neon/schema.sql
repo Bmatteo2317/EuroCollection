@@ -187,7 +187,6 @@ RETURNS int LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_year int := p_year;
   v_qty int;
-  v_sum int;
 BEGIN
   IF v_year IS NULL THEN
     SELECT year INTO v_year FROM public.user_collection_years
@@ -195,56 +194,49 @@ BEGIN
     ORDER BY quantity DESC, year ASC LIMIT 1;
   END IF;
 
+  -- ATTENZIONE al vincolo CHECK (quantity > 0) di entrambe le tabelle:
+  -- "decrementa e poi cancella" NON funziona, perché l'UPDATE che porta la
+  -- quantità a 0 viola il CHECK prima che la DELETE venga eseguita. Perciò si
+  -- decrementa solo la riga con quantity > 1 e, quando è l'ultimo pezzo, si
+  -- cancella la riga senza mai scrivere 0.
   IF v_year IS NOT NULL THEN
     UPDATE public.user_collection_years SET quantity = quantity - 1
     WHERE user_id = p_giver AND coin_id = p_coin AND year = v_year
+      AND quantity > 1
     RETURNING quantity INTO v_qty;
-    IF NOT FOUND THEN RAISE EXCEPTION 'NOT_OWNED'; END IF;
-    IF v_qty <= 0 THEN
+
+    IF NOT FOUND THEN
       DELETE FROM public.user_collection_years
       WHERE user_id = p_giver AND coin_id = p_coin AND year = v_year;
+      IF NOT FOUND THEN RAISE EXCEPTION 'NOT_OWNED'; END IF;
     END IF;
 
     INSERT INTO public.user_collection_years (user_id, coin_id, year, quantity)
     VALUES (p_receiver, p_coin, v_year, 1)
     ON CONFLICT (user_id, coin_id, year)
     DO UPDATE SET quantity = public.user_collection_years.quantity + 1;
-
-    SELECT coalesce(sum(quantity), 0) INTO v_sum
-    FROM public.user_collection_years
-    WHERE user_id = p_giver AND coin_id = p_coin;
-    IF v_sum <= 0 THEN
-      DELETE FROM public.user_collection
-      WHERE user_id = p_giver AND coin_id = p_coin;
-    ELSE
-      INSERT INTO public.user_collection (user_id, coin_id, quantity)
-      VALUES (p_giver, p_coin, v_sum)
-      ON CONFLICT (user_id, coin_id)
-      DO UPDATE SET quantity = excluded.quantity;
-    END IF;
-
-    SELECT coalesce(sum(quantity), 0) INTO v_sum
-    FROM public.user_collection_years
-    WHERE user_id = p_receiver AND coin_id = p_coin;
-    INSERT INTO public.user_collection (user_id, coin_id, quantity)
-    VALUES (p_receiver, p_coin, v_sum)
-    ON CONFLICT (user_id, coin_id)
-    DO UPDATE SET quantity = excluded.quantity;
-  ELSE
-    UPDATE public.user_collection SET quantity = quantity - 1
-    WHERE user_id = p_giver AND coin_id = p_coin
-    RETURNING quantity INTO v_qty;
-    IF NOT FOUND THEN RAISE EXCEPTION 'NOT_OWNED'; END IF;
-    IF v_qty <= 0 THEN
-      DELETE FROM public.user_collection
-      WHERE user_id = p_giver AND coin_id = p_coin;
-    END IF;
-
-    INSERT INTO public.user_collection (user_id, coin_id, quantity)
-    VALUES (p_receiver, p_coin, 1)
-    ON CONFLICT (user_id, coin_id)
-    DO UPDATE SET quantity = public.user_collection.quantity + 1;
   END IF;
+
+  -- Riga principale: un pezzo in meno al donatore e uno in più al destinatario,
+  -- con la stessa accortezza. Non si riscrive la quantità come somma degli anni:
+  -- quella somma ignora i pezzi segnati solo nella riga principale (pulsante +)
+  -- e azzererebbe i doppioni già posseduti dal destinatario.
+  UPDATE public.user_collection SET quantity = quantity - 1
+  WHERE user_id = p_giver AND coin_id = p_coin AND quantity > 1
+  RETURNING quantity INTO v_qty;
+
+  IF NOT FOUND THEN
+    DELETE FROM public.user_collection
+    WHERE user_id = p_giver AND coin_id = p_coin;
+    -- Nessuna riga principale: è un errore solo se non c'è nemmeno l'anno
+    -- tracciato (cioè il donatore non possiede affatto quel pezzo).
+    IF NOT FOUND AND v_year IS NULL THEN RAISE EXCEPTION 'NOT_OWNED'; END IF;
+  END IF;
+
+  INSERT INTO public.user_collection (user_id, coin_id, quantity)
+  VALUES (p_receiver, p_coin, 1)
+  ON CONFLICT (user_id, coin_id)
+  DO UPDATE SET quantity = public.user_collection.quantity + 1;
 
   RETURN v_year;
 END $$;
@@ -298,14 +290,18 @@ BEGIN
   v_requested_year := public.move_one_unit(
     r.addressee_id, r.proposer_id, r.requested_coin_id, r.requested_year);
 
+  -- Un'unità è stata scambiata: l'offerta si scala di uno e sparisce quando
+  -- era l'ultima disponibile. Il decremento è condizionato a quantity > 1 e
+  -- l'offerta esaurita si cancella: scrivere 0 violerebbe il CHECK
+  -- (trade_offers_quantity_check) prima della DELETE.
   UPDATE public.trade_offers SET quantity = quantity - 1
-  WHERE id = r.offered_offer_id;
+  WHERE id = r.offered_offer_id AND quantity > 1;
   DELETE FROM public.trade_offers
-  WHERE id = r.offered_offer_id AND quantity <= 0;
+  WHERE id = r.offered_offer_id AND quantity <= 1;
   UPDATE public.trade_offers SET quantity = quantity - 1
-  WHERE id = r.requested_offer_id;
+  WHERE id = r.requested_offer_id AND quantity > 1;
   DELETE FROM public.trade_offers
-  WHERE id = r.requested_offer_id AND quantity <= 0;
+  WHERE id = r.requested_offer_id AND quantity <= 1;
 
   UPDATE public.trade_requests
   SET status = 'completed',
