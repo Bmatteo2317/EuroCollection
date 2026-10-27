@@ -1,8 +1,8 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
 
-// Su Vercel/Edge il driver usa fetch con pooling: si abilita la cache
-// della connessione solo quando richiesto.
-neonConfig.fetchConnectionCache = true;
+// NOTA: `neonConfig.fetchConnectionCache` non va impostato. Il driver lo
+// mantiene solo per compatibilità — è sempre attivo — e impostarlo stampa un
+// avviso di deprecazione a ogni import.
 
 export type Sql = ReturnType<typeof neon>;
 
