@@ -1,5 +1,10 @@
 import { cookies } from "next/headers";
 import { sql, toFriendlyDbError } from "@/lib/db";
+import {
+  DEVICE_COOKIE_NAME,
+  deviceCookieOptions,
+  isValidDeviceId,
+} from "@/lib/device-cookie";
 
 /**
  * Identità SOLO dispositivo (modello HOME-GYM): niente email, niente
@@ -8,39 +13,42 @@ import { sql, toFriendlyDbError } from "@/lib/db";
  * public.users (+ profilo via trigger). Il nome visualizzato si cambia
  * in /profilo. Ogni dispositivo ha il suo account; per usare lo stesso
  * su due dispositivi basta importare l'ID in /profilo.
+ *
+ * Nome, validazione e attributi del cookie stanno in lib/device-cookie.ts:
+ * lo stesso modulo è usato da proxy.ts, che assegna il cookie alla prima
+ * richiesta (qui sarebbe illegale durante il render).
  */
 
-const COOKIE_NAME = "euro_device";
-// 400 giorni (max pratico per i cookie persistenti).
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 400;
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export function isValidDeviceId(value: unknown): value is string {
-  return typeof value === "string" && UUID_RE.test(value);
-}
+export { isValidDeviceId };
 
 /** Legge l'ID dispositivo dal cookie. MAI throw (null = dispositivo nuovo). */
 export async function getDeviceUserId(): Promise<string | null> {
   try {
     const store = await cookies();
-    const raw = store.get(COOKIE_NAME)?.value;
+    const raw = store.get(DEVICE_COOKIE_NAME)?.value;
     return isValidDeviceId(raw) ? raw : null;
   } catch {
     return null;
   }
 }
 
+/**
+ * Scrive il cookie di identità. Next consente la modifica dei cookie solo in
+ * un Server Action o in un Route Handler: durante il render lo assegna già
+ * proxy.ts PRIMA del render stesso, quindi un rifiuto qui non è fatale (la
+ * richiesta in corso usa comunque l'ID generato) e non deve diventare un
+ * errore "database non disponibile" mostrato all'utente.
+ */
 async function writeDeviceCookie(id: string): Promise<void> {
-  const store = await cookies();
-  store.set(COOKIE_NAME, id, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: MAX_AGE_SECONDS,
-  });
+  try {
+    const store = await cookies();
+    store.set(DEVICE_COOKIE_NAME, id, deviceCookieOptions());
+  } catch (e) {
+    console.warn(
+      "[auth] cookie dispositivo non scrivibile in questo contesto (lo assegna proxy.ts):",
+      e instanceof Error ? e.message : e
+    );
+  }
 }
 
 /** Crea la riga utente se manca (idempotente) e imposta il cookie. */
