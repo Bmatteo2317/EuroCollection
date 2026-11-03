@@ -3,9 +3,11 @@ import {
   DENOMINATIONS,
   getAllCoins,
   type CoinSource,
+  type CoinType,
   type CountryCode,
   type Denomination,
 } from "@euro-coins/source";
+import extraCoins from "@/data/coins-extra.json";
 
 export type { CoinSource, CountryCode, Denomination };
 export { COUNTRIES, DENOMINATIONS };
@@ -418,16 +420,17 @@ function findEnrichmentRule(coin: CoinSource): EnrichmentRule | undefined {
   );
 }
 
-function toCatalogCoin(coin: CoinSource): CatalogCoin {
-  const rule = findEnrichmentRule(coin);
+function toCatalogCoin(coin: CoinSource, curated?: string): CatalogCoin {
+  // Una scheda scritta a mano (overlay) vince sulle regole sugli URL BCE.
+  const rule = curated ? undefined : findEnrichmentRule(coin);
   return {
     ...coin,
     id: coinId(coin),
     faceValue: formatDenomination(coin.denomination),
     countryName: COUNTRY_NAMES[coin.country] ?? coin.country.toUpperCase(),
-    description: rule?.description ?? fallbackDescription(coin),
+    description: curated ?? rule?.description ?? fallbackDescription(coin),
     isCommemorative: coin.type === "commemorative",
-    isEnriched: Boolean(rule),
+    isEnriched: Boolean(curated ?? rule),
     metal: denominationMetal(coin.denomination),
     years: [coin.year],
   };
@@ -484,8 +487,60 @@ function assignDesignYears(coins: CatalogCoin[]): void {
  * Next.js memorizza comunque il risultato nelle pagine statiche
  * (`generateStaticParams` + `revalidate`), senza bisogno di singleton.
  */
+// ---------------------------------------------------------------------------
+// OVERLAY: monete non ancora nel pacchetto.
+//
+// `@euro-coins/source` è un pacchetto npm: una moneta emessa oggi compare solo
+// alla release successiva. `data/coins-extra.json` copre quel buco senza
+// aspettare: le voci scritte lì si aggiungono al catalogo con lo STESSO id
+// (`coinId`) che avrà la voce ufficiale, così quando il pacchetto la include
+// i segni nella collezione non si perdono (la voce doppia viene scartata).
+//
+// Il file lo aggiorna `npm run coins:sync` leggendo le pagine BCE per anno;
+// si può anche scrivere a mano. Gli id restano stabili: mai rinumerare
+// `index` di una voce già presente.
+// ---------------------------------------------------------------------------
+
+interface ExtraCoin {
+  country: CountryCode;
+  year: number;
+  denomination: Denomination;
+  type: CoinType;
+  /** Progressivo per (paese, anno, taglio, tipo): 0, 1, 2... */
+  index?: number;
+  /** URL BCE dell'immagine; se assente si usa il segnaposto locale. */
+  url?: string;
+  /** Scheda curata in italiano. */
+  description?: string;
+}
+
+/** La BCE non ha ancora pubblicato la foto: meglio un segnaposto che un'immagine rotta. */
+const PLACEHOLDER_COIN_IMAGE = "/coins/placeholder.svg";
+
+const EXTRA_COINS: readonly ExtraCoin[] = (
+  extraCoins as unknown as { coins?: ExtraCoin[] }
+).coins ?? [];
+
 export function getCatalog(): CatalogCoin[] {
-  const catalog = getAllCoins().map(toCatalogCoin);
+  const catalog = getAllCoins().map((coin) => toCatalogCoin(coin));
+  const known = new Set(catalog.map((coin) => coin.id));
+
+  for (const extra of EXTRA_COINS) {
+    const coin: CoinSource = {
+      country: extra.country,
+      year: extra.year,
+      denomination: extra.denomination,
+      type: extra.type,
+      index: extra.index ?? 0,
+      url: extra.url?.trim() || PLACEHOLDER_COIN_IMAGE,
+    };
+    const id = coinId(coin);
+    // Già arrivata nel pacchetto: vince la voce ufficiale, niente doppioni.
+    if (known.has(id)) continue;
+    known.add(id);
+    catalog.push(toCatalogCoin(coin, extra.description));
+  }
+
   assignDesignYears(catalog);
   return catalog;
 }

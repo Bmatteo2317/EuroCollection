@@ -1,0 +1,53 @@
+name: Aggiorna catalogo monete
+
+# Tiene allineato il catalogo alla fonte ufficiale (BCE) una volta a settimana.
+# Se trova monete nuove apre una pull request: il merge è una revisione umana,
+# non un aggiornamento automatico in produzione.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # lunedì 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installa le dipendenze
+        run: npm ci
+
+      - name: Cerca monete nuove
+        run: node scripts/coins-sync.mjs --write
+
+      - name: Apri una PR se il catalogo cambia
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet -- data/coins-extra.json; then
+            echo "Nessuna moneta nuova: catalogo già allineato."
+            exit 0
+          fi
+          BRANCH=coins/auto-sync
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add data/coins-extra.json
+          git commit -m "Aggiunge al catalogo le monete nuove pubblicate dalla BCE"
+          git push --force origin "$BRANCH"
+          if gh pr list --head "$BRANCH" --json number --jq '.[0].number' | grep -q .; then
+            echo "PR già aperta: aggiornata."
+          else
+            gh pr create \
+              --head "$BRANCH" \
+              --title "Catalogo monete: nuove emissioni dalla BCE" \
+              --body "Aggiornamento automatico di \`data/coins-extra.json\` con le monete presenti sul sito BCE ma non ancora in \`@euro-coins/source\`. Controlla che paese, anno e indice siano giusti prima del merge."
+          fi

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Immagine non ancora disponibile">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#f4f4f5"/>
+      <stop offset="70%" stop-color="#e4e4e7"/>
+      <stop offset="100%" stop-color="#d4d4d8"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="82" fill="url(#g)" stroke="#a1a1aa" stroke-width="3"/>
+  <circle cx="100" cy="100" r="70" fill="none" stroke="#c7c7cd" stroke-width="1.5" stroke-dasharray="4 5"/>
+  <text x="100" y="96" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#71717a">immagine</text>
+  <text x="100" y="116" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#71717a">non ancora</text>
+  <text x="100" y="136" text-anchor="middle" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#71717a">pubblicata</text>
+</svg>

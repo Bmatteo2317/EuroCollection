@@ -1,0 +1,23 @@
+{
+  "nota": "Monete non ancora presenti in @euro-coins/source. Le voci qui sopra il pacchetto: appena una moneta arriva nel pacchetto, la voce va rimossa (npm run coins:sync lo segnala). url può essere omessa: la UI usa un segnaposto finché la BCE non pubblica l'immagine.",
+  "coins": [
+    {
+      "country": "de",
+      "year": 2025,
+      "denomination": "2euro",
+      "type": "commemorative",
+      "index": 1,
+      "url": "https://www.ecb.europa.eu/euro/coins/comm/html/comm_2025/Germany.jpg",
+      "description": "35° anniversario della riunificazione tedesca (1990-2025)."
+    },
+    {
+      "country": "lv",
+      "year": 2025,
+      "denomination": "2euro",
+      "type": "commemorative",
+      "index": 0,
+      "url": "https://www.ecb.europa.eu/euro/coins/comm/html/comm_2025/Latvia.JPG",
+      "description": "Sēlija — regione storica della Lettonia (serie delle regioni storiche lettoni, 2016-2025)."
+    }
+  ]
+}

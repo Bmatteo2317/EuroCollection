@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "coins:sync": "node scripts/coins-sync.mjs --write",
+    "coins:check": "node scripts/coins-sync.mjs --check"
   },
   "dependencies": {
     "@euro-coins/source": "^0.4.0",
